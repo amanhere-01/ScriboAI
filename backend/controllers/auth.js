@@ -1,4 +1,4 @@
-const { createToken } = require("../configs/jwtAuthentication.js");
+const { createToken, validateToken } = require("../configs/jwtAuthentication.js");
 const db = require("../configs/db.js");
 const bcrypt = require("bcrypt");
 
@@ -18,7 +18,7 @@ async function handleUserSignUp(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await db.query(
-      "INSERT INTO users(username, email, password) VALUES (?, ?, ?)",
+      "INSERT INTO users(username, email, password, auth_provider) VALUES (?, ?, ?, 'LOCAL')",
       [username, email, hashedPassword]
     );
     console.log(`User has been created with ID: ${result.insertId}`);
@@ -47,6 +47,13 @@ async function handleUserSignIn(req, res){
     }
 
     const user = rows[0];
+    
+    if(user.auth_provider !== "LOCAL"){
+      return res.status(400).json({
+        error : "Login through Google Account"
+      })
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.password);
     if(!passwordMatch){
       return res.status(400).json({ error: "Wrong password" });
@@ -70,5 +77,43 @@ async function handleUserSignIn(req, res){
   }
 }
 
+async function handleGoogleAuth(req,res){
+  const user = req.user;
 
-module.exports = { handleUserSignUp, handleUserSignIn };
+  console.log("--------------------------REQ.USER: controller/auth.js", user);
+
+  const token = createToken(user);
+
+  res.cookie('token', token, {
+    httpOnly: true,
+    sameSite: 'lax',
+  })
+
+  res.redirect("http://localhost:5173/oauth/success");
+}
+
+async function handleAuthMe(req,res){
+  try{
+    const token = req.cookies.token;
+    if(!token){
+      return res.status(401).json({error : "Not authenticated"});
+    }
+
+    const payload = validateToken(token);
+    if (!payload) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    const [rows] = await db.query('SELECT * FROM users where id = ?', [payload.id]);
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    return res.status(200).json(rows[0]);
+  } catch (err) {
+    return res.status(401).json({ error: "Authentication failed" });
+  }
+}
+
+module.exports = { handleUserSignUp, handleUserSignIn, handleGoogleAuth, handleAuthMe };
