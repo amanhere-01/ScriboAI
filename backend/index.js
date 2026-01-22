@@ -31,7 +31,7 @@ app.use('/auth', authRouter);
 app.use(checkAuthentication);
 
 app.use('/user', userRouter);
-app.use('/docs', docsRouter);
+app.use('/doc', docsRouter);
 
 
 

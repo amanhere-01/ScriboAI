@@ -62,7 +62,6 @@ async function handleUserSignIn(req, res){
     const token = createToken(user);
     res.cookie('token', token, {
       httpOnly: true,
-      // secure: true,
       sameSite: 'strict',
     })
 
@@ -74,6 +73,20 @@ async function handleUserSignIn(req, res){
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
+  }
+}
+
+async function handleUserSignOut(req, res){
+  try{
+    res.clearCookie('token', {
+      httpOnly: true,
+      sameSite: 'Lax'
+    })
+
+    res.status(200).json({message: "Logged out successfully"});
+  } catch(error){
+      console.log(`LogOut Error: ${error.message}`);
+      res.status(500).json({error: "Logout failed"});
   }
 }
 
@@ -116,4 +129,4 @@ async function handleAuthMe(req,res){
   }
 }
 
-module.exports = { handleUserSignUp, handleUserSignIn, handleGoogleAuth, handleAuthMe };
+module.exports = { handleUserSignUp, handleUserSignIn, handleUserSignOut, handleGoogleAuth, handleAuthMe };
