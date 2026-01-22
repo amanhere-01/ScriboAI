@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import OAuthSuccess from "./pages/OAuthSuccess";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
+import DocumentEditor from "./pages/DocumentEditor";
 
 export default function AppRoutes() {
   const isAuthenticated = useSelector(
@@ -11,23 +12,19 @@ export default function AppRoutes() {
 
   return (
     <Routes>
-      <Route
-        path="/auth"
-        element={
-          isAuthenticated ? <Navigate to="/" /> : <Auth />
-        }
+      <Route 
+        path="/auth" element={isAuthenticated ? <Navigate to="/" /> : <Auth />}
       />
 
-      <Route
-        path="/"
-        element={
-          isAuthenticated ? <Home /> : <Navigate to="/auth" />
-        }
+      <Route 
+        path="/" element={ isAuthenticated ? <Home /> : <Navigate to="/auth" />} 
       />
 
       <Route 
         path="/oauth/success" element={<OAuthSuccess/>}
       />
+
+      <Route path="/doc/:docId" element={<DocumentEditor />} />
     </Routes>
   );
 }

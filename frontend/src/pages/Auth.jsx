@@ -189,7 +189,6 @@ export default function Auth() {
           </form>
         </div>
 
-        {/* Decorative elements */}
         <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full blur-2xl opacity-50 animate-pulse"></div>
         <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-gradient-to-br from-indigo-400 to-blue-500 rounded-full blur-2xl opacity-50 animate-pulse delay-1000"></div>
       </div>
