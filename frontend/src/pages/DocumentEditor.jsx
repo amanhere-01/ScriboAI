@@ -3,8 +3,10 @@ import { useParams } from "react-router-dom";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
-import { Bold,Italic,Undo, Redo,AlignLeft,AlignCenter,AlignRight,List,ListOrdered,FileText } from "lucide-react";
+import { Bold,Italic,Undo, Redo,AlignLeft,AlignCenter,AlignRight,List,ListOrdered,FileText, Sparkles } from "lucide-react";
 import { toast } from "react-toastify";
+import AIPanel from "../components/AiPanel";
+
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -16,6 +18,8 @@ export default function DocumentEditor() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
+  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
+
 
   // FETCH DOCUMENT
   useEffect(() => {
@@ -232,6 +236,35 @@ export default function DocumentEditor() {
           <EditorContent editor={editor} />
         </div>
       </div>
+
+      <button
+        onClick={() => setIsAIPanelOpen(true)}
+        className="fixed right-6 bottom-6 z-30 group"
+      >
+        {/* Pulsing background rings */}
+        {/* <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-cyan-600 animate-pulse opacity-75"></div>
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-cyan-600 animate-ping opacity-20"></div> */}
+        
+        {/* Main button */}
+        <div className="relative px-5 py-3 rounded-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-xl hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-110 transition-all duration-300 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+          <span className="font-semibold">Ask AI</span>
+          
+          {/* Shine effect on hover */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
+        </div>
+        
+        {/* Floating particles */}
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-bounce opacity-75"></div>
+        <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full animate-bounce opacity-75" style={{ animationDelay: '300ms' }}></div>
+      </button>
+      
+
+      <AIPanel
+        isOpen={isAIPanelOpen}
+        onClose={() => setIsAIPanelOpen(false)}
+      />
+
     </div>
   );
 }
