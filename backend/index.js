@@ -4,16 +4,17 @@ const app = express();
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user.js");
 const docsRouter = require("./routes/docs.js");
-const db = require('./configs/db.js');
+const askaiRouter = require("./routes/askai.js");
 const { checkAuthentication, checkAuthorization } = require('./middlewares/authorization.js');
 const cookieParser = require("cookie-parser");
-
 const cors = require('cors');
+
 
 const PORT = 2121;
 
-app.use(express.json());
 app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -32,7 +33,7 @@ app.use(checkAuthentication);
 
 app.use('/user', userRouter);
 app.use('/doc', docsRouter);
-
+app.use('/ai', askaiRouter);
 
 
 
