@@ -1,5 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Sparkles, X, Bot, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 
 export default function AIPanel({ isOpen, onClose }) {
   const [messages, setMessages] = useState([
@@ -31,25 +37,50 @@ export default function AIPanel({ isOpen, onClose }) {
     return () => {
         document.body.style.overflow = "";
     };
-    }, [isOpen]);
+  }, [isOpen]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (isTyping || !input.trim()) return;
 
     const userMessage = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        role: "assistant",
-        content: "I'm here to help! This is a demo response. In production, this would connect to your AI backend.",
-      };
-      setMessages((prev) => [...prev, aiResponse]);
+    try{
+      const res = await fetch(`${BACKEND_URL}/ai/chat`,{
+        method: "POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        credentials:"include",
+        body : JSON.stringify({
+          message : userMessage.content 
+        })
+      })
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "AI request failed");
+      }
+
+      const aiMessgae = { role:"assistant", content:data.reply};
+      setMessages((prev) => [...prev, aiMessgae]);
+
+    } catch(err){
+
+      console.error(err);
+      setMessages((prev) => [...prev, 
+        {
+          role: "assistant",
+          content: "⚠️ Sorry, I couldn't get a response right now. Please try again."
+        }
+      ]);
+
+    } finally{
       setIsTyping(false);
-    }, 1500);
+    }
+    
   };
 
   const handleKeyPress = (e) => {
@@ -61,7 +92,7 @@ export default function AIPanel({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Backdrop with blur effect */}
+      {/* Backdrop without blur effect */}
       {isOpen && (
         <div
           onClick={onClose}
@@ -84,7 +115,6 @@ export default function AIPanel({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="font-bold text-white text-lg">AI Assistant</h2>
-              {/* <p className="text-xs text-white/80">Always here to help</p> */}
             </div>
           </div>
           <button
@@ -99,7 +129,7 @@ export default function AIPanel({ isOpen, onClose }) {
         </div>
 
         {/* Quick Actions */}
-        <div className="px-6 py-4 border-b border-gray-200/50 shrink-0 bg-white/50">
+        {/* <div className="px-6 py-4 border-b border-gray-200/50 shrink-0 bg-white/50">
           <div className="flex gap-2 overflow-x-auto pb-1">
             {["Summarize", "Improve writing", "Expand ideas", "Fix grammar"].map((action) => (
               <button
@@ -110,30 +140,24 @@ export default function AIPanel({ isOpen, onClose }) {
               </button>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gradient-to-b from-transparent to-gray-50/50">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gradient-to-b from-black to-gray-400">
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`flex gap-3 ${
-                msg.role === "user" ? "flex-row-reverse" : "flex-row"
-              } animate-in fade-in slide-in-from-bottom-2 duration-300`}
+              className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               {/* Avatar */}
               <div
                 className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm ${
                   msg.role === "user"
-                    ? "bg-gradient-to-br from-purple-500 to-purple-600"
-                    : "bg-gradient-to-br from-cyan-500 to-cyan-600"
+                    ? "bg-gradient-to-br from-yellow-500 to-purple-600"
+                    : "bg-gradient-to-br from-orange-500 to-cyan-600"
                 }`}
               >
-                {msg.role === "user" ? (
-                  <User className="w-4 h-4 text-white" />
-                ) : (
-                  <Bot className="w-4 h-4 text-white" />
-                )}
+                {msg.role === "user" ? (<User className="w-4 h-4 text-black" />) : ( <Bot className="w-4 h-4 text-black" />)}
               </div>
 
               {/* Message Bubble */}
@@ -144,9 +168,11 @@ export default function AIPanel({ isOpen, onClose }) {
                     : "bg-white border border-gray-200 text-gray-800 rounded-tl-md"
                 }`}
               >
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {msg.content}
-                </p>
+                <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
               </div>
             </div>
           ))}
@@ -171,8 +197,8 @@ export default function AIPanel({ isOpen, onClose }) {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-gray-200/50 bg-white shrink-0 shadow-lg">
-          <div className="flex gap-2 items-end">
+        <div className="p-4 border-t border-gray-400/50 bg-gray-200 shrink-0 shadow-lg">
+          <div className="flex gap-2 items-stretch">
             <div className="flex-1 relative">
               <textarea
                 value={input}
@@ -180,7 +206,7 @@ export default function AIPanel({ isOpen, onClose }) {
                 onKeyDown={handleKeyPress}
                 placeholder="Ask anything or describe what you need..."
                 rows={1}
-                className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3 pr-12 outline-none focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all duration-200 resize-none text-sm"
+                className="w-full border-2 border-gray-400 rounded-2xl px-4 py-3 pr-12 outline-none focus:border-gray-600 focus:ring-4 focus:ring-gray-200 transition-all duration-200 resize-none text-sm"
                 style={{ maxHeight: "120px" }}
               />
               <div className="absolute right-3 bottom-3 text-xs text-gray-400">
@@ -189,7 +215,7 @@ export default function AIPanel({ isOpen, onClose }) {
             </div>
             <button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() || isTyping}
               className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-cyan-600 text-white hover:shadow-lg hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center group shrink-0"
             >
               <Send className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
