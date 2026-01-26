@@ -1,5 +1,5 @@
-const { createToken, validateToken } = require("../configs/jwtAuthentication.js");
-const db = require("../configs/db.js");
+const { createToken, validateToken } = require("../services/jwtAuthentication.js");
+const db = require("../services/db.js");
 const bcrypt = require("bcrypt");
 
 async function handleUserSignUp(req, res) {

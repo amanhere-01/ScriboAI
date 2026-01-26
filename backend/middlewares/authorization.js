@@ -1,4 +1,4 @@
-const { validateToken } = require("../configs/jwtAuthentication");
+const { validateToken } = require("../services/jwtAuthentication");
 
 function checkAuthentication(req,res,next){
   const token = req.cookies?.token;

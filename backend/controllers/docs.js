@@ -1,4 +1,4 @@
-const db = require("../configs/db");
+const db = require("../services/db");
 
 async function createNewDoc(req, res){
   if (!req.user) {
@@ -128,4 +128,16 @@ async function getAllDocs(req, res){
 }
 
 
-module.exports = {createNewDoc, getDocById, updateDocContent, updateDocTitle, deleteDoc, getAllDocs}
+async function getDocumentCount(req, res){
+  const userId = req.user.id;
+  try{
+    const [rows] = await db.query("SELECT COUNT(*) as count FROM docs WHERE owner_id=?",[userId]);
+    return res.status(200).json({count: rows[0].count});
+  }
+  catch(err){
+    console.error("Document Count error", err);
+    return res.status(500).json({ error: "DB error" });
+  }
+}
+
+module.exports = {createNewDoc, getDocById, updateDocContent, updateDocTitle, deleteDoc, getAllDocs, getDocumentCount}

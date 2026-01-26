@@ -1,6 +1,6 @@
 const express = require('express');
 const { handleUserSignUp, handleUserSignIn, handleUserSignOut, handleGoogleAuth, handleAuthMe,  } = require('../controllers/auth');
-const passport = require('../configs/googleAuth');
+const passport = require('../services/googleAuth');
 const router = express.Router();
 
 

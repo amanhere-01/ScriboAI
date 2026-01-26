@@ -32,7 +32,7 @@ app.use('/auth', authRouter);
 app.use(checkAuthentication);
 
 app.use('/user', userRouter);
-app.use('/doc', docsRouter);
+app.use('/docs', docsRouter);
 app.use('/ai', askaiRouter);
 
 
