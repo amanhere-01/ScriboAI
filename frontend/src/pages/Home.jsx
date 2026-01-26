@@ -21,7 +21,7 @@ export default function Home() {
   useEffect(() => {
     const fetchDocs = async() => {
       try{
-        const res = await fetch(`${BACKEND_URL}/doc`, {
+        const res = await fetch(`${BACKEND_URL}/docs`, {
           credentials: "include"
         });
 
@@ -32,7 +32,6 @@ export default function Home() {
           return;
         }
         
-        console.log(data.docs);
         setDocs(data.docs || []);
 
       } catch (err) {
@@ -61,10 +60,7 @@ export default function Home() {
         return;
       }
       
-      dispatch(logoutSuccess());
-      setShowMenu(false);
       toast.success(data.message || "Signed out successfully.");
-      navigate('/auth')
 
     } catch(error){
       console.error("Sign out error:", error);
@@ -81,7 +77,7 @@ export default function Home() {
     if (loading) return;
     setLoading(true);
     try{
-      const res = await fetch(`${BACKEND_URL}/doc/create-doc`, {
+      const res = await fetch(`${BACKEND_URL}/docs/create-doc`, {
         method: "POST",
         credentials: 'include'
       })
@@ -107,7 +103,7 @@ export default function Home() {
     if (!confirm("Delete this document?")) return;
 
     try {
-      const res = await fetch(`${BACKEND_URL}/doc/${docId}`, {
+      const res = await fetch(`${BACKEND_URL}/docs/${docId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -136,7 +132,10 @@ export default function Home() {
           </h1>
 
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+            <div
+              onClick={() => navigate("/profile")} 
+              className="w-10 h-10 rounded-full cursor-pointer bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md"
+            >
               <User className="w-5 h-5 text-white" />
             </div>
 

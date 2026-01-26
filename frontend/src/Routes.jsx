@@ -4,6 +4,8 @@ import OAuthSuccess from "./pages/OAuthSuccess";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import DocumentEditor from "./pages/DocumentEditor";
+import Profile from "./pages/Profile";
+
 
 export default function AppRoutes() {
   const isAuthenticated = useSelector(
@@ -20,11 +22,11 @@ export default function AppRoutes() {
         path="/" element={ isAuthenticated ? <Home /> : <Navigate to="/auth" />} 
       />
 
-      <Route 
-        path="/oauth/success" element={<OAuthSuccess/>}
-      />
+      <Route path="/oauth/success" element={<OAuthSuccess/>}/>
 
       <Route path="/doc/:docId" element={<DocumentEditor />} />
+
+      <Route path="/profile" element={<Profile />} />
     </Routes>
   );
 }

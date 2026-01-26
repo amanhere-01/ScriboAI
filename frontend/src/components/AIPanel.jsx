@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, X, Bot, User } from "lucide-react";
+import { Send, Sparkles, X, Bot, User, Zap } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 
-export default function AIPanel({ isOpen, onClose }) {
+export default function AIPanel({ onClose, onInsert }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -16,6 +16,7 @@ export default function AIPanel({ isOpen, onClose }) {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [provider, setProvider] = useState("gemini");
   const chatEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -26,18 +27,6 @@ export default function AIPanel({ isOpen, onClose }) {
     scrollToBottom();
   }, [messages]);
 
-  //Lock background scroll when panel is open
-  useEffect(() => {
-    if (isOpen) {
-        document.body.style.overflow = "hidden";
-    } else {
-        document.body.style.overflow = "";
-    }
-
-    return () => {
-        document.body.style.overflow = "";
-    };
-  }, [isOpen]);
 
   const handleSend = async () => {
     if (isTyping || !input.trim()) return;
@@ -55,7 +44,8 @@ export default function AIPanel({ isOpen, onClose }) {
         },
         credentials:"include",
         body : JSON.stringify({
-          message : userMessage.content 
+          message : userMessage.content,
+          provider : provider
         })
       })
 
@@ -92,29 +82,18 @@ export default function AIPanel({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Backdrop without blur effect */}
-      {isOpen && (
-        <div
-          onClick={onClose}
-          className="fixed inset-0 bg-black/20 z-30 transition-opacity duration-300"
-        />
-      )}
 
       {/* Side Panel */}
-      <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[480px] bg-gradient-to-br from-white to-gray-50 z-40 shadow-2xl
-                    transform transition-all duration-300 ease-out
-                    ${isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"}
-                    flex flex-col`}
-      >
+      <div className="h-full w-full bg-gradient-to-br from-white to-gray-50 shadow-2xl flex flex-col">
+
         {/* Header with gradient */}
-        <div className="relative h-20 px-6 flex items-center justify-between border-b border-gray-200/50 shrink-0 bg-gradient-to-r from-purple-600 to-cyan-600 shadow-lg">
+        <div className="relative h-20 px-6 flex items-center justify-between border-b border-gray-200/50 shrink-0 bg-gradient-to-r from-slate-600 to-cyan-800 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-              <Sparkles className="w-5 h-5 text-white" />
+              <Bot className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-lg">AI Assistant</h2>
+              <h2 className="font-bold text-white text-lg">Ask AI</h2>
             </div>
           </div>
           <button
@@ -128,19 +107,6 @@ export default function AIPanel({ isOpen, onClose }) {
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-32 h-32 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
         </div>
 
-        {/* Quick Actions */}
-        {/* <div className="px-6 py-4 border-b border-gray-200/50 shrink-0 bg-white/50">
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {["Summarize", "Improve writing", "Expand ideas", "Fix grammar"].map((action) => (
-              <button
-                key={action}
-                className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-gray-700 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200 whitespace-nowrap shadow-sm"
-              >
-                {action}
-              </button>
-            ))}
-          </div>
-        </div> */}
 
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-gradient-to-b from-black to-gray-400">
@@ -149,7 +115,6 @@ export default function AIPanel({ isOpen, onClose }) {
               key={idx}
               className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
-              {/* Avatar */}
               <div
                 className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm ${
                   msg.role === "user"
@@ -173,6 +138,19 @@ export default function AIPanel({ isOpen, onClose }) {
                     {msg.content}
                   </ReactMarkdown>
                 </div>
+
+                {msg.role === "assistant" && (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={() => onInsert?.(msg.content)}
+                      className="text-xs px-3 py-1 rounded-full
+                                bg-purple-100 text-purple-700
+                                hover:bg-purple-200 transition"
+                    >
+                      ➕ Insert into doc
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -216,14 +194,71 @@ export default function AIPanel({ isOpen, onClose }) {
             <button
               onClick={handleSend}
               disabled={!input.trim() || isTyping}
-              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-cyan-600 text-white hover:shadow-lg hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center group shrink-0"
+              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-500 to-slate-700 text-white hover:shadow-lg hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center group shrink-0"
             >
               <Send className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
+          {/* <p className="text-xs text-gray-500 mt-2 text-center">
             Press Enter to send • Shift + Enter for new line
-          </p>
+          </p> */}
+
+          {/* Model Selector */}
+
+
+          <div className="bg-white rounded-2xl p-2 shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-800 font-medium flex items-center gap-2">
+                <div className="w-2 h-2 bg-slate-400 rounded-full" />
+                AI Model
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={isTyping}
+                  onClick={() => setProvider("gemini")}
+                  className={`group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
+                    ${provider === "gemini"
+                      ? "bg-black text-white shadow-lg shadow-purple-200"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }
+                    ${isTyping ? "opacity-50 cursor-not-allowed" : ""}
+                  `}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Gemini</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isTyping}
+                  onClick={() => setProvider("groq")}
+                  className={`group relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
+                    ${provider === "groq"
+                      ? "bg-black text-white shadow-lg shadow-purple-200"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }
+                    ${isTyping ? "opacity-50 cursor-not-allowed" : ""}
+                  `}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Zap className="w-4 h-4" />
+                    <span>Groq</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+
+
+
+
+
+
+
         </div>
       </div>
     </>

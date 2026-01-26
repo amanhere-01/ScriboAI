@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
-import { Bold,Italic,Undo, Redo,AlignLeft,AlignCenter,AlignRight,List,ListOrdered,FileText, Sparkles } from "lucide-react";
+import { Bold,Italic,Undo, Redo,AlignLeft,AlignCenter,AlignRight,List,ListOrdered,FileText, Bot } from "lucide-react";
 import { toast } from "react-toastify";
 import AIPanel from "../components/AiPanel";
+import { marked } from "marked";
 
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function DocumentEditor() {
+  const navigate = useNavigate();
   const { docId } = useParams();
   const [doc, setDoc] = useState(null);
   const [title, setTitle] = useState("");
@@ -25,7 +27,7 @@ export default function DocumentEditor() {
   useEffect(() => {
     const fetchDoc = async () => {
       try {
-        const res = await fetch(`${BACKEND_URL}/doc/${docId}`, {
+        const res = await fetch(`${BACKEND_URL}/docs/${docId}`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -76,7 +78,7 @@ export default function DocumentEditor() {
 
     const timeout = setTimeout(async () => {
       try {
-        await fetch(`${BACKEND_URL}/doc/${docId}`, {
+        await fetch(`${BACKEND_URL}/docs/${docId}`, {
           method: "PUT",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -102,7 +104,7 @@ export default function DocumentEditor() {
     if (title === doc.title) return;
 
     try {
-      await fetch(`${BACKEND_URL}/doc/${docId}/title`, {
+      await fetch(`${BACKEND_URL}/docs/${docId}/title`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -114,6 +116,19 @@ export default function DocumentEditor() {
       toast.error("Failed to save title");
     }
   };
+
+  const insertIntoEditor = (markdownText) => {
+    if (!editor) return;
+
+    const html = marked.parse(markdownText);
+
+    editor
+      .chain()
+      .focus()
+      .insertContent(html)
+      .run();
+  };
+
 
 	// UI Functions
 	const ToolBtn = ({ children, onClick, active }) => (
@@ -134,11 +149,15 @@ export default function DocumentEditor() {
   if (loading) return <p className="p-6">Loading document...</p>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* ================= TOP BAR ================= */}
-      <div className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-gray-200 flex items-center justify-between px-6 z-20 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-600 to-cyan-600 rounded-lg shadow-lg shadow-purple-500/30">
+    <div className="h-screen flex flex-col bg-gray-100">
+      {/* Top Bar */}
+      <div className="h-16 bg-white/80 backdrop-blur-xl border-b border-gray-200 flex items-center justify-between px-6 z-20 shadow-sm shrink-0">
+        <div className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition">
+          <div 
+            onClick={() => navigate("/")}
+            title="Go to Home"
+            className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-600 to-cyan-600 rounded-lg shadow-lg shadow-purple-500/30"
+          >
             <FileText className="w-5 h-5 text-white" />
           </div>
           
@@ -180,9 +199,9 @@ export default function DocumentEditor() {
         </div>
       </div>
 
-      {/* ================= TOOLBAR ================= */}
+      {/* Toolbar */}
       {editor && (
-        <div className="sticky top-14 bg-white border-b z-10">
+        <div className="bg-white border-b border-gray-200 z-10 shrink-0">
           <div className="flex gap-1 px-4 py-2 justify-center">
             <ToolBtn onClick={() => editor.chain().focus().undo().run()}>
               <Undo size={16} />
@@ -230,41 +249,48 @@ export default function DocumentEditor() {
         </div>
       )}
 
-      {/* ================= EDITOR PAGE ================= */}
-      <div className="pt-28 pb-20 min-h-screen bg-gray-100">
-        <div className="max-w-4xl mx-auto bg-white shadow px-20 py-14 min-h-[calc(100vh-7rem)]">
-          <EditorContent editor={editor} />
+      {/* Main Content Area - Split Screen */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left: Document Editor */}
+        <div
+          className={`transition-all duration-300 overflow-y-auto ${
+            isAIPanelOpen ? "w-[calc(100%-400px)]" : "w-full"
+          }`}
+        >
+          <div className="max-w-4xl mx-auto bg-white shadow-lg px-20 py-14 min-h-full">
+            <EditorContent editor={editor} />
+          </div>
         </div>
+
+        {/* Right: AI Panel */}
+        {isAIPanelOpen && (
+          <div className="w-[650px] border-l border-gray-200 shrink-0 animate-in slide-in-from-right duration-300">
+            <AIPanel
+              onClose={() => setIsAIPanelOpen(false)}
+              onInsert={insertIntoEditor}
+            />
+          </div>
+        )}
       </div>
 
-      <button
-        onClick={() => setIsAIPanelOpen(true)}
-        className="fixed right-6 bottom-6 z-30 group"
-      >
-        {/* Pulsing background rings */}
-        {/* <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-cyan-600 animate-pulse opacity-75"></div>
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-cyan-600 animate-ping opacity-20"></div> */}
-        
-        {/* Main button */}
-        <div className="relative px-5 py-3 rounded-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-xl hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-110 transition-all duration-300 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-          <span className="font-semibold">Ask AI</span>
-          
-          {/* Shine effect on hover */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-        </div>
-        
-        {/* Floating particles */}
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-bounce opacity-75"></div>
-        <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full animate-bounce opacity-75" style={{ animationDelay: '300ms' }}></div>
-      </button>
-      
+      {/* Floating AI Button */}
+      {!isAIPanelOpen && (
+        <button
+          onClick={() => setIsAIPanelOpen(true)}
+          className="fixed right-6 bottom-6 z-30 group"
+        >
+          <div className="relative px-5 py-3 rounded-full bg-gradient-to-r from-slate-600 to-cyan-600 text-white shadow-xl hover:shadow-2xl hover:shadow-purple-500/50 transform hover:scale-110 transition-all duration-300 flex items-center gap-2">
+            <Bot className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+            <span className="font-semibold">Ask AI</span>
+          </div>
 
-      <AIPanel
-        isOpen={isAIPanelOpen}
-        onClose={() => setIsAIPanelOpen(false)}
-      />
-
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full animate-bounce opacity-75"></div>
+          <div
+            className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full animate-bounce opacity-75"
+            style={{ animationDelay: "300ms" }}
+          ></div>
+        </button>
+      )}
     </div>
   );
 }
