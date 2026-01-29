@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Menu, Plus, User, LogOut, FileText, MoreVertical, Trash2, ExternalLink } from "lucide-react";
+import { Menu, Plus, User, LogOut, FileText, MoreVertical, Trash2, ExternalLink, Folder, BadgePlus, CirclePlus } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { logoutSuccess } from "../store/authSlice";
 import { useEffect } from "react";
+import CreateFolder from "../components/CreateFolder";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -14,9 +15,39 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [folders, setFolders] = useState([]);
+  const [foldersLoading, setFoldersLoading] = useState(true);
   const [docs, setDocs] = useState([]);
   const [docsLoading, setDocsLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [showFolderDialog, setShowFolderDialog] = useState(false);
+
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/f`, {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          toast.error(data.error || "Failed to fetch folders");
+          return;
+        }
+
+        setFolders(data.folders || []);
+      } catch (err) {
+        console.error("Fetch folders error:", err);
+        toast.error("Failed to load folders");
+      } finally {
+        setFoldersLoading(false);
+      }
+    };
+
+    fetchFolders();
+  }, []);
 
   useEffect(() => {
     const fetchDocs = async() => {
@@ -122,6 +153,39 @@ export default function Home() {
     }
   };
   
+  const handleCreateFolder = async(name) => {
+    if (!name || !name.trim()) {
+      toast.error("Folder name cannot be empty");
+      return;
+    }
+
+    try{
+      const res = await fetch(`${BACKEND_URL}/f/create-folder`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({name})
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to create folder");
+        return;
+      }
+
+      const folderId = data.folderId;
+      navigate(`/f/${folderId}`);
+      
+    } catch (err) {
+      toast.error("Failed to create folder");
+    } finally{
+      setShowFolderDialog(false);
+      setShowCreateMenu(false);
+    }
+  }
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Top Bar */}
@@ -174,10 +238,51 @@ export default function Home() {
             Your intelligent document workspace
           </p>
         </div>
+              
+        {/* Folders Grid */}
+        {!foldersLoading && folders.length > 0 && (
+          <>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">
+              Folders
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              {folders.map((folder) => (
+                <div
+                  key={folder.id}
+                  onClick={() => navigate(`/f/${folder.id}`)}
+                  className="cursor-pointer bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition flex items-center gap-4"
+                >
+                  <Folder className="w-8 h-8 text-yellow-500" />
+                  <div>
+                    <h4 className="font-semibold text-gray-800 truncate">
+                      {folder.name}
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      Created on:{" "}
+                      {new Date(folder.created_at).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Documents Grid */}
+        {!docsLoading && docs.length > 0 && (
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">
+            Documents
+          </h3>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {!docsLoading && docs.length > 0 &&
+          {!docsLoading &&
+            docs.length > 0 &&
             docs.map((doc) => (
               <div
                 key={doc.id}
@@ -256,16 +361,50 @@ export default function Home() {
           )}
         </div>
       </div>
+      
 
       {/* Floating Create Button */}
-      <button
-        onClick={handleCreateDoc}
-        disabled={loading}
-        className="group fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition"
-      >
-        <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-200" />
-      </button>
+      <div className="fixed bottom-8 right-8 z-50">
+        <button
+          onClick={() => setShowCreateMenu(!showCreateMenu)}
+          className="group w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition"
+        >
+          <Plus className="w-10 h-10 group-hover:rotate-90 transition-transform duration-200" />
+        </button>
 
+        {showCreateMenu && (
+          <div className="absolute bottom-20 right-0 bg-white rounded-xl shadow-xl border w-48 overflow-hidden">
+            <button
+              onClick={() => {
+                setShowCreateMenu(false);
+                handleCreateDoc();
+              }}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50"
+            >
+              <FileText className="w-5 h-5 text-red-600" />
+              New Document
+            </button>
+
+            <button
+              onClick={() => {
+                setShowCreateMenu(false);
+                setShowFolderDialog(true);
+              }}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50"
+            >
+              <Folder className="w-5 h-5 text-yellow-500"/>
+              Create Folder
+            </button>
+          </div>
+        )}   
+      </div>
+
+      
+      <CreateFolder
+        isOpen={showFolderDialog}
+        onClose={() => setShowFolderDialog(false)}
+        onCreate={handleCreateFolder}
+      />
 
       {showMenu && (
         <div
@@ -278,6 +417,13 @@ export default function Home() {
         <div
           className="fixed inset-0 z-40"
           onClick={() => setOpenMenuId(null)}
+        />
+      )}
+
+      {showCreateMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setShowCreateMenu(false)}
         />
       )}
     </div>

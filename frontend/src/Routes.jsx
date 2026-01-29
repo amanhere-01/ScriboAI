@@ -5,6 +5,7 @@ import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import DocumentEditor from "./pages/DocumentEditor";
 import Profile from "./pages/Profile";
+import FolderPage from "./pages/FolderPage";
 
 
 export default function AppRoutes() {
@@ -25,6 +26,8 @@ export default function AppRoutes() {
       <Route path="/oauth/success" element={<OAuthSuccess/>}/>
 
       <Route path="/doc/:docId" element={<DocumentEditor />} />
+
+      <Route path="/f/:folderId" element={<FolderPage />} />
 
       <Route path="/profile" element={<Profile />} />
     </Routes>
