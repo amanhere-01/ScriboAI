@@ -5,6 +5,8 @@ const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user.js");
 const docsRouter = require("./routes/docs.js");
 const askaiRouter = require("./routes/askai.js");
+const folderRouter = require("./routes/folder.js");
+
 const { checkAuthentication, checkAuthorization } = require('./middlewares/authorization.js');
 const cookieParser = require("cookie-parser");
 const cors = require('cors');
@@ -32,6 +34,7 @@ app.use('/auth', authRouter);
 app.use(checkAuthentication);
 
 app.use('/user', userRouter);
+app.use('/f', folderRouter);
 app.use('/docs', docsRouter);
 app.use('/ai', askaiRouter);
 

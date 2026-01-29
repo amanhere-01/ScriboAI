@@ -5,12 +5,21 @@ async function createNewDoc(req, res){
     return res.status(401).json({ error: "Unauthorized" });
   }
   const userId = req.user.id;
-
+  const { folderId } = req.body;
+  
   try{
-    const[result] = await db.query(
-      'INSERT INTO docs(owner_id, title) VALUES (?, "Untitled document")',
-      [userId]
-    );
+    let query;
+    let params;
+
+    if (folderId) {
+      query = `INSERT INTO docs (owner_id, folder_id, title) VALUES (?, ?, "Untitled document")`;
+      params = [userId, folderId];
+    } else {
+      query = `INSERT INTO docs (owner_id, title) VALUES (?, "Untitled document")`;
+      params = [userId];
+    }
+
+    const[result] = await db.query(query, params);
 
     return res.status(201).json({
       message : "New document created",
@@ -118,7 +127,7 @@ async function deleteDoc(req, res){
 async function getAllDocs(req, res){
   const userId = req.user.id;
   try{
-    const [rows] = await db.query("SELECT * FROM docs WHERE owner_id=? ORDER BY updated_at DESC",[userId]);
+    const [rows] = await db.query("SELECT * FROM docs WHERE owner_id=? AND folder_id IS NULL ORDER BY updated_at DESC",[userId]);
     return res.status(200).json({docs: rows});
   }
   catch(err){
