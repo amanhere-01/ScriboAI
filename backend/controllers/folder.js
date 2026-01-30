@@ -55,4 +55,49 @@ async function getAllDocsInFolder(req, res){
 }
 
 
-module.exports = {createNewFolder, getAllFolder, getAllDocsInFolder}
+async function updateFolderTitle(req, res){
+	const {folderId} = req.params;
+	const userId = req.user.id;
+	const {name} = req.body;
+
+	try{
+		const[result] = await db.query(
+			'UPDATE folders SET name=?, updated_at = CURRENT_TIMESTAMP WHERE id=? AND owner_id=?',
+			[name, folderId, userId]
+		)
+
+		if (result.affectedRows === 0) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+		return res.status(200).json({ message: "Folder name changed" });
+	} catch(err){
+		console.error("Update folder name error:", err);
+    return res.status(500).json({ error: "DB error" });
+	}
+}
+
+
+async function deleteFolder(req, res){
+	const {folderId} = req.params;
+	const userId = req.user.id;
+
+	try{
+		const[result] = await db.query(
+			'DELETE FROM folders WHERE id=? AND owner_id=?',
+			[folderId, userId]
+		)
+
+		if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Folder not found" });
+    }
+
+		return res.status(200).json({ message: "Folder Deleted" }); 
+	} catch(err){
+		console.error("Delete folder error:", err);
+    return res.status(500).json({ error: "DB error" });
+	}
+}
+
+
+module.exports = {createNewFolder, getAllFolder, getAllDocsInFolder, updateFolderTitle, deleteFolder}

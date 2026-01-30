@@ -5,7 +5,7 @@ async function createNewDoc(req, res){
     return res.status(401).json({ error: "Unauthorized" });
   }
   const userId = req.user.id;
-  const { folderId } = req.body;
+  const { folderId } = req.body || {};
   
   try{
     let query;
