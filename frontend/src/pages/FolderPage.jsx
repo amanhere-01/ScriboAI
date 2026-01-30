@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { FileText, Plus, ArrowLeft, Folder, Clock, FolderOpen } from "lucide-react";
+import { FileText, Plus, ArrowLeft, Clock, FolderOpen, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -9,6 +9,8 @@ export default function FolderPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
 
+  const [editingName, setEditingName] = useState(false);
+  const [folderName, setFolderName] = useState("");
   const [folder, setFolder] = useState(null);
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ export default function FolderPage() {
         }
 
         setFolder(data.folder);
+        setFolderName(data.folder.name);
         setDocs(data.docs || []);
       } catch (err) {
         toast.error("Failed to load folder");
@@ -60,6 +63,67 @@ export default function FolderPage() {
       toast.error("Failed to create document");
     }
   };
+
+  const handleDeleteDoc = async (e, docId) => {
+    e.stopPropagation(); 
+
+    if (!confirm("Delete this document?")) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/docs/${docId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to delete document");
+        return;
+      }
+
+      setDocs((prev) => prev.filter((doc) => doc.id !== docId));
+      toast.success("Document deleted");
+    } catch {
+      toast.error("Delete failed");
+    }
+  };
+
+  const saveFolderName = async () => {
+    const trimmed = folderName.trim();
+
+    if (!trimmed || trimmed === folder.name) {
+      setFolderName(folder.name);
+      setEditingName(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/f/${folderId}/title`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to rename folder");
+        setFolderName(folder.name);
+        return;
+      }
+
+      setFolder((prev) => ({ ...prev, name: trimmed }));
+      toast.success("Folder renamed");
+    } catch {
+      toast.error("Rename failed");
+      setFolderName(folder.name);
+    } finally {
+      setEditingName(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -100,9 +164,31 @@ export default function FolderPage() {
                   <FolderOpen className="w-6 h-6 text-black" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-black bg-clip-text text-transparent">
-                    {folder.name}
-                  </h1>
+                  <div className="flex flex-col">
+                    {editingName ? (
+                      <input
+                        value={folderName}
+                        onChange={(e) => setFolderName(e.target.value)}
+                        onBlur={saveFolderName}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveFolderName();
+                          if (e.key === "Escape") {
+                            setFolderName(folder.name);
+                            setEditingName(false);
+                          }
+                        }}
+                        className="text-2xl font-bold outline-none border-b-2 border-indigo-500 bg-transparent px-1 -ml-1 text-gray-800 w-fit"
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        onClick={() => setEditingName(true)}
+                        className="text-2xl font-bold cursor-pointer hover:bg-gray-100 px-2 py-1 -ml-2 rounded-lg transition-colors text-gray-800 w-fit"
+                      >
+                        {folderName}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500 mt-0.5">
                     {docs.length} {docs.length === 1 ? 'document' : 'documents'}
                   </p>
@@ -138,6 +224,12 @@ export default function FolderPage() {
                   <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 rounded-xl transition-all duration-200"></div>
                   
                   <div className="relative">
+                    <button
+                      onClick={(e) => handleDeleteDoc(e, doc.id)}
+                      className="absolute top-1 right-1 z-10 p-2 rounded-lg bg-white/80 hover:bg-red-100 text-gray-500 hover:text-red-600 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                     <div className="flex items-start gap-3 mb-3">
                       <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg group-hover:from-indigo-200 group-hover:to-purple-200 transition-all duration-200">
                         <FileText className="w-5 h-5 text-indigo-600" />
@@ -165,11 +257,6 @@ export default function FolderPage() {
                         </span>
                       </div>
                     )}
-
-                    {/* Hover indicator */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <div className="w-2 h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-                    </div>
                   </div>
                 </div>
               ))}

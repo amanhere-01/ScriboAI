@@ -19,7 +19,8 @@ export default function Home() {
   const [foldersLoading, setFoldersLoading] = useState(true);
   const [docs, setDocs] = useState([]);
   const [docsLoading, setDocsLoading] = useState(true);
-  const [openMenuId, setOpenMenuId] = useState(null);
+  const [openDocMenuId, setOpenDocMenuId] = useState(null);
+  const [openFolderMenuId, setOpenFolderMenuId] = useState(null);
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [showFolderDialog, setShowFolderDialog] = useState(false);
 
@@ -153,6 +154,29 @@ export default function Home() {
     }
   };
   
+  const handleDeleteFolder = async (folderId) => {
+    if (!confirm("Delete this folder?")) return;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/f/${folderId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to delete folder");
+        return;
+      }
+
+      setFolders((prev) => prev.filter((f) => f.id !== folderId));
+      toast.success("Folder deleted");
+    } catch (err) {
+      toast.error("Delete failed");
+    }
+  };
+
   const handleCreateFolder = async(name) => {
     if (!name || !name.trim()) {
       toast.error("Folder name cannot be empty");
@@ -250,24 +274,64 @@ export default function Home() {
               {folders.map((folder) => (
                 <div
                   key={folder.id}
-                  onClick={() => navigate(`/f/${folder.id}`)}
-                  className="cursor-pointer bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition flex items-center gap-4"
+                  className="relative bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition flex items-center gap-4"
                 >
-                  <Folder className="w-8 h-8 text-yellow-500" />
-                  <div>
-                    <h4 className="font-semibold text-gray-800 truncate">
-                      {folder.name}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      Created on:{" "}
-                      {new Date(folder.created_at).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
+                  {/* 3-dot menu */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenFolderMenuId(
+                        openFolderMenuId === folder.id ? null : folder.id
+                      );
+                    }}
+                    className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+                  >
+                    <MoreVertical className="w-5 h-5 text-gray-600" />
+                  </button>
+
+                  {/* Dropdown */}
+                  {openFolderMenuId === folder.id && (
+                    <div className="absolute right-4 top-12 bg-white border rounded-lg shadow-lg z-50 w-44">
+                      <button
+                        onClick={() => window.open(`/f/${folder.id}`, "_blank")}
+                        className="w-full px-4 py-2 flex items-center gap-2 hover:bg-gray-50 text-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Open in new tab
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteFolder(folder.id)}
+                        className="w-full px-4 py-2 flex items-center gap-2 hover:bg-red-50 text-sm text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Card body */}
+                  <div
+                    onClick={() => navigate(`/f/${folder.id}`)}
+                    className="cursor-pointer flex items-center gap-4"
+                  >
+                    <Folder className="w-8 h-8 text-yellow-500" />
+                    <div>
+                      <h4 className="font-semibold text-gray-800 truncate">
+                        {folder.name}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        Created on:{" "}
+                        {new Date(folder.created_at).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
                   </div>
                 </div>
+
               ))}
             </div>
           </>
@@ -281,8 +345,7 @@ export default function Home() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {!docsLoading &&
-            docs.length > 0 &&
+          {!docsLoading && docs.length > 0 &&
             docs.map((doc) => (
               <div
                 key={doc.id}
@@ -292,7 +355,7 @@ export default function Home() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setOpenMenuId(openMenuId === doc.id ? null : doc.id);
+                    setOpenDocMenuId(openDocMenuId === doc.id ? null : doc.id);
                   }}
                   className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
                 >
@@ -300,7 +363,7 @@ export default function Home() {
                 </button>
 
                 {/* Dropdown */}
-                {openMenuId === doc.id && (
+                {openDocMenuId === doc.id && (
                   <div className="absolute right-4 top-12 bg-white border rounded-lg shadow-lg z-50 w-44">
                     <button
                       onClick={() => window.open(`/doc/${doc.id}`, "_blank")}
@@ -413,10 +476,17 @@ export default function Home() {
         />
       )}
 
-      {openMenuId && (
+      {openFolderMenuId && (
         <div
           className="fixed inset-0 z-40"
-          onClick={() => setOpenMenuId(null)}
+          onClick={() => setOpenFolderMenuId(null)}
+        />
+      )}
+
+      {openDocMenuId && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setOpenDocMenuId(null)}
         />
       )}
 
