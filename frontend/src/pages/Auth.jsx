@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../store/authSlice";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -48,16 +49,17 @@ export default function Auth() {
       }
 
       dispatch(loginSuccess(data.user));
-
+      toast.success(data.message);
       navigate("/");
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const googleLogin = () => {
+    toast.info("Redirecting to Google...")
     window.location.href = `${BACKEND_URL}/auth/google`;
   };
 

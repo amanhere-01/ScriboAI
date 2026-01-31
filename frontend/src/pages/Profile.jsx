@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { User, LogOut, ArrowLeft, Mail, Calendar, Shield, Settings, FileText, Trash2 } from "lucide-react";
+import { User, LogOut, ArrowLeft, Mail, Folder, Shield, Settings, FileText, Trash2 } from "lucide-react";
 import { logoutSuccess } from "../store/authSlice";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
@@ -15,32 +15,35 @@ export default function ImprovedProfile() {
   const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const [documentsCount, setDocumentsCount] = useState(0);
+  const [foldersCount, setFoldersCount] = useState(0);
 
 	if (!user) {
 		navigate("/auth");
 		return null;
 	}
 
-	useEffect(() => {
-		const fetchDocumentCount = async() => {
-			try{
-				const res = await fetch(`${BACKEND_URL}/docs/count`, {
-					credentials: "include"
-				});
 
-				if(!res.ok){
-					throw new Error("Failed to get document count");
-				}
+  useEffect(() => {
+    fetchCount(`${BACKEND_URL}/docs/count`, setDocumentsCount);
+    fetchCount(`${BACKEND_URL}/f/count`, setFoldersCount);
+  }, []);
 
-				const data = await res.json();
-				setDocumentsCount(data.count);
-			} catch(e){
-				console.log("Failed to get document count : ", e);
-			}
-		};
+  const fetchCount = async (url, setCount) => {
+    try {
+      const res = await fetch(url, { credentials: "include" });
 
-		fetchDocumentCount();
-	},[]);
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error);
+      }
+
+      setCount(data.count);
+    } catch (e) {
+      toast.error(e.message);
+    }
+  };
+	
 
   const handleLogout = async () => {
 			if (loading) return;
@@ -54,22 +57,20 @@ export default function ImprovedProfile() {
 				const data = await res.json();
 	
 				if(!res.ok){
-					toast.error(data.error || "Failed to log out");
-					return;
+					throw new Error(data.error);
 				}
 				
 				toast.success(data.message || "Signed out successfully.");
 	
 			} catch(error){
 				console.error("Sign out error:", error);
-				toast.error("Network error while logging out");
-			} finally {   //if backend fails to log out...user should be logged out either way
+				toast.error(error.message);
+			} finally {  
 				dispatch(logoutSuccess());
 				setLoading(false);
 				navigate('/auth')
 			}
 		};
-
 		
 
   return (
@@ -139,11 +140,11 @@ export default function ImprovedProfile() {
               <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-4 border border-cyan-200">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-cyan-600 flex items-center justify-center shadow-lg">
-                    <Calendar className="w-6 h-6 text-white" />
+                    <Folder className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-cyan-900">Jan 2026</p>
-                    <p className="text-sm text-cyan-700">Member since</p>
+                    <p className="text-2xl font-bold text-cyan-900">{foldersCount}</p>
+                    <p className="text-sm text-cyan-700">Folders</p>
                   </div>
                 </div>
               </div>

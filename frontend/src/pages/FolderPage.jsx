@@ -25,15 +25,14 @@ export default function FolderPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          toast.error(data.error || "Failed to load folder");
-          return;
+          throw new Error(data.error);
         }
 
         setFolder(data.folder);
         setFolderName(data.folder.name);
         setDocs(data.docs || []);
       } catch (err) {
-        toast.error("Failed to load folder");
+        toast.error(err.message);
       } finally {
         setLoading(false);
       }
@@ -54,13 +53,13 @@ export default function FolderPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to create document");
-        return;
+        throw new Error(data.error);
       }
 
+      toast.success(data.message);
       navigate(`/doc/${data.docId}`);
     } catch {
-      toast.error("Failed to create document");
+      toast.error(err.message);
     }
   };
 
@@ -78,14 +77,13 @@ export default function FolderPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to delete document");
-        return;
+        throw new Error(data.error);
       }
 
       setDocs((prev) => prev.filter((doc) => doc.id !== docId));
-      toast.success("Document deleted");
-    } catch {
-      toast.error("Delete failed");
+      toast.success(data.message);
+    } catch(err) {
+      toast.error(err.message);
     }
   };
 
@@ -109,15 +107,14 @@ export default function FolderPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to rename folder");
         setFolderName(folder.name);
-        return;
+        throw new Error(data.error);
       }
 
       setFolder((prev) => ({ ...prev, name: trimmed }));
-      toast.success("Folder renamed");
-    } catch {
-      toast.error("Rename failed");
+      toast.success(data.message);
+    } catch(err) {
+      toast.error(err.message);
       setFolderName(folder.name);
     } finally {
       setEditingName(false);

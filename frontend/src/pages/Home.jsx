@@ -34,14 +34,12 @@ export default function Home() {
         const data = await res.json();
 
         if (!res.ok) {
-          toast.error(data.error || "Failed to fetch folders");
-          return;
+          throw new Error(data.error || "Failed to fetch folders");
         }
 
         setFolders(data.folders || []);
       } catch (err) {
-        console.error("Fetch folders error:", err);
-        toast.error("Failed to load folders");
+        toast.error(err.message);
       } finally {
         setFoldersLoading(false);
       }
@@ -60,14 +58,13 @@ export default function Home() {
         const data = await res.json();
 
         if (!res.ok) {
-          toast.error(data.error || "Failed to fetch documents");
-          return;
+          throw new Error(data.error || "Failed to fetch documents");
         }
         
         setDocs(data.docs || []);
 
       } catch (err) {
-        console.error("Fetch docs error:", err);
+        toast.error(err.message);
       } finally {
         setDocsLoading(false);
       }
@@ -88,15 +85,12 @@ export default function Home() {
       const data = await res.json();
 
       if(!res.ok){
-        toast.error(data.error || "Failed to log out");
-        return;
+        throw new Error(data.error);
       }
       
-      toast.success(data.message || "Signed out successfully.");
-
+      toast.success(data.message);
     } catch(error){
-      console.error("Sign out error:", error);
-      toast.error("Network error while logging out");
+      toast.error(error.message);
     } finally {   //if backend fails to log out...user should be logged out either way
       dispatch(logoutSuccess());
       setShowMenu(false);
@@ -117,15 +111,14 @@ export default function Home() {
       const data = await res.json();
 
       if(!res.ok) {
-        toast.error(data.error || "Failed to create document");
-        return;
+        throw new Error(data.error);
       }
 
       const docId = data.docId;
+      toast.success(data.message);
       navigate(`/doc/${docId}`);
-
-    } catch(e){
-      toast.error(e || "Failed to create document");
+    } catch(err){
+      toast.error(err.message);
     } finally{
       setLoading(false);
     }
@@ -143,14 +136,13 @@ export default function Home() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to delete document");
-        return;
+        throw new Error(data.error);
       }
 
       setDocs((prev) => prev.filter((doc) => doc.id !== docId));
       toast.success("Document deleted");
     } catch (err) {
-      toast.error("Delete failed");
+      toast.error(err.message);
     }
   };
   
@@ -166,14 +158,13 @@ export default function Home() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to delete folder");
-        return;
+        throw new Error(data.error);
       }
 
       setFolders((prev) => prev.filter((f) => f.id !== folderId));
       toast.success("Folder deleted");
     } catch (err) {
-      toast.error("Delete failed");
+      toast.error(err.message);
     }
   };
 
@@ -194,15 +185,15 @@ export default function Home() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to create folder");
-        return;
+        throw new Error(data.error);
       }
 
       const folderId = data.folderId;
+      toast.success(data.message);
       navigate(`/f/${folderId}`);
       
     } catch (err) {
-      toast.error("Failed to create folder");
+      toast.error(err.message);
     } finally{
       setShowFolderDialog(false);
       setShowCreateMenu(false);

@@ -37,7 +37,7 @@ export default function DocumentEditor() {
         setDoc(data.doc);
         setTitle(data.doc.title);
       } catch (err) {
-        toast.error(err.message || "Failed to load document");
+        toast.error(err.message);
       } finally {
         setLoading(false);
       }
