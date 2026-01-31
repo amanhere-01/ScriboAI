@@ -7,7 +7,7 @@ async function getAllUser(req, res){
   } 
   catch (err) {
     console.error(err);
-    res.status(500).send("DB Error");
+    return res.status(500).json({error: "Failed to get all user"});
   }
 }
 
@@ -16,11 +16,16 @@ async function getUserById(req, res){
 
   try{
     const [rows] = await db.query('SELECT * FROM users WHERE id=?',[userId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     return res.status(200).json(rows);
   }
   catch (err) {
     console.error(err);
-    res.status(500).send("DB Error");
+    return res.status(500).json({error: "Failed to get user details"});
   }
 }
 
@@ -34,7 +39,7 @@ async function getUserDocs(req, res){
   }
   catch (err) {
     console.error(err);
-    res.status(500).send("DB Error");
+    return res.status(500).json({error: "Failed to get user dcouments"});
   }
 }
 
@@ -43,11 +48,14 @@ async function getUserProfile(req, res){
 
   try{
     const [rows] = await db.query('SELECT * FROM users WHERE id=?', [userId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
     return res.status(200).json(rows);
   }
   catch (err) {
     console.error(err);
-    res.status(500).send("DB Error");
+    return res.status(500).json({error: "Failed to get profile"});
   }
 }
 

@@ -28,7 +28,7 @@ async function createNewDoc(req, res){
 
   } catch(err){
     console.error("Create doc error:", err);
-    res.status(500).send("DB Error");
+    return res.status(500).json({error: "Failed to create document"});
   }
 }
 
@@ -52,7 +52,7 @@ async function getDocById(req, res){
     return res.status(200).json({doc: rows[0]});
   } catch (err) {
     console.error("Get doc error:", err);
-    return res.status(500).json({ error: "DB Error" });
+    return res.status(500).json({ error: "Failed to get document" });
   }
 }
 
@@ -78,7 +78,7 @@ async function updateDocContent(req,res){
     return res.status(200).json({ message: "Document saved" });
   } catch(err){
     console.error("Update content error:", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Update content error" });
   }
 }
 
@@ -100,7 +100,7 @@ async function updateDocTitle(req, res){
     return res.status(200).json({ message: "Title Updated" });
   } catch(err){
     console.error("Update title  error:", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Failed to change title" });
   }
 }
 
@@ -120,7 +120,7 @@ async function deleteDoc(req, res){
     return res.status(200).json({ message: "Document Deleted" }); 
   } catch(err){
     console.error("Delete doc error:", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Failed to delete document" });
   }
 }
 
@@ -132,7 +132,7 @@ async function getAllDocs(req, res){
   }
   catch(err){
     console.error("All document fetching error:", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Failed to get documents" });
   }
 }
 
@@ -145,7 +145,7 @@ async function getDocumentCount(req, res){
   }
   catch(err){
     console.error("Document Count error", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Failed to get document count" });
   }
 }
 

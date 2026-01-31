@@ -62,7 +62,7 @@ async function handleUserSignIn(req, res){
     const token = createToken(user);
     res.cookie('token', token, {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
     })
 
     return res.status(200).json({

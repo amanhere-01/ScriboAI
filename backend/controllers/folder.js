@@ -10,12 +10,12 @@ async function createNewFolder(req, res){
 			)
 
 			return res.status(201).json({
-				message : "New document created",
+				message : "New folder created",
 				folderId : result.insertId
 			});
     } catch(err){
 			console.error("Create folder error:", err);
-			res.status(500).send("DB Error");
+			return res.status(500).json({error: "Failed to create folder"});
 		}
 }
 
@@ -28,7 +28,7 @@ async function getAllFolder(req, res){
 	}
 	catch(err){
 		console.error("All folder fetching error:", err);
-		return res.status(500).json({ error: "DB error" });
+		return res.status(500).json({ error: "Failed to get all folders" });
 	}
 }
 
@@ -49,13 +49,12 @@ async function getAllDocsInFolder(req, res){
 		});
 	} catch (err) {
     console.error("Get docs in folder error:", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Failed to get documents" });
   }
-	
 }
 
 
-async function updateFolderTitle(req, res){
+async function updateFolderName(req, res){
 	const {folderId} = req.params;
 	const userId = req.user.id;
 	const {name} = req.body;
@@ -73,7 +72,7 @@ async function updateFolderTitle(req, res){
 		return res.status(200).json({ message: "Folder name changed" });
 	} catch(err){
 		console.error("Update folder name error:", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Failed to change name" });
 	}
 }
 
@@ -95,9 +94,19 @@ async function deleteFolder(req, res){
 		return res.status(200).json({ message: "Folder Deleted" }); 
 	} catch(err){
 		console.error("Delete folder error:", err);
-    return res.status(500).json({ error: "DB error" });
+    return res.status(500).json({ error: "Failed to delete folder" });
 	}
 }
 
-
-module.exports = {createNewFolder, getAllFolder, getAllDocsInFolder, updateFolderTitle, deleteFolder}
+async function getFolderCount(req, res){
+	const userId = req.user.id;
+	try{
+		const [rows] = await db.query("SELECT COUNT(*) as count FROM folders WHERE owner_id=?",[userId]);
+		return res.status(200).json({count: rows[0].count});
+	}
+	catch(err){
+		console.error("Folder Count error", err);
+		return res.status(500).json({ error: "Failed to get folder count" });
+	}
+}
+module.exports = {createNewFolder, getAllFolder, getAllDocsInFolder, updateFolderName, deleteFolder, getFolderCount}
