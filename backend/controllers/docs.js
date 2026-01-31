@@ -12,10 +12,10 @@ async function createNewDoc(req, res){
     let params;
 
     if (folderId) {
-      query = `INSERT INTO docs (owner_id, folder_id, title) VALUES (?, ?, "Untitled document")`;
+      query = `INSERT INTO docs (owner_id, folder_id, title) VALUES (?, ?, 'Untitled Document')`;
       params = [userId, folderId];
     } else {
-      query = `INSERT INTO docs (owner_id, title) VALUES (?, "Untitled document")`;
+      query = `INSERT INTO docs (owner_id, title) VALUES (?, 'Untitled Document')`;
       params = [userId];
     }
 

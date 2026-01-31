@@ -12,12 +12,12 @@ const folderRouter = require("./routes/folder.js");
 const { checkAuthentication, checkAuthorization } = require('./middlewares/authorization.js');
 const cookieParser = require("cookie-parser");
 const cors = require('cors');
-const PORT = 2121;
+const PORT = process.env.PORT || 2121;
 
 
 const authLimiter = rateLimit({
-  windowMs: 15*60*1000,
-  max: 5,
+  windowMs: 5*60*1000,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -75,5 +75,5 @@ app.use('/docs', docsRouter);
 
 
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 })
