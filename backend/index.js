@@ -50,7 +50,10 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    "http://localhost:5173",
+    // "https://scriboai.vercel.app", // future prod
+  ],
   credentials: true
 }));
 

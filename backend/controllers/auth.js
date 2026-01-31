@@ -62,7 +62,9 @@ async function handleUserSignIn(req, res){
     const token = createToken(user);
     res.cookie('token', token, {
       httpOnly: true,
-      sameSite: 'lax',
+      secure: true,    
+      sameSite: "none", 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     })
 
     return res.status(200).json({
@@ -80,7 +82,8 @@ async function handleUserSignOut(req, res){
   try{
     res.clearCookie('token', {
       httpOnly: true,
-      sameSite: 'Lax'
+      secure: true,    
+      sameSite: "none", 
     })
 
     res.status(200).json({message: "Logged out successfully"});
@@ -99,7 +102,9 @@ async function handleGoogleAuth(req,res){
 
   res.cookie('token', token, {
     httpOnly: true,
-    sameSite: 'lax',
+    secure: true,    
+    sameSite: "none", 
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   })
 
   res.redirect("http://localhost:5173/oauth/success");
