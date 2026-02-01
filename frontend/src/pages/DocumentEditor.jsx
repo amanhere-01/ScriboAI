@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
-import { Bold,Italic,Undo, Redo,AlignLeft,AlignCenter,AlignRight,List,ListOrdered,FileText, Bot } from "lucide-react";
+import { Bold,Italic,Undo, Redo,AlignLeft,AlignCenter,AlignRight,List,ListOrdered,FileText, Bot, File } from "lucide-react";
 import { toast } from "react-toastify";
 import AIPanel from "../components/AIPanel";
 import { marked } from "marked";
@@ -146,7 +146,19 @@ export default function DocumentEditor() {
 		<div className="w-px h-6 bg-gray-300 mx-1" />
 	);
 
-  if (loading) return <p className="p-6">Loading document...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+            <File className="w-6 h-6 text-indigo-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <p className="text-gray-600 font-medium">Loading document...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
