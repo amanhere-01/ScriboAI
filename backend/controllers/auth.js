@@ -96,8 +96,6 @@ async function handleUserSignOut(req, res){
 async function handleGoogleAuth(req,res){
   const user = req.user;
 
-  console.log("--------------------------REQ.USER: controller/auth.js", user);
-
   const token = createToken(user);
 
   res.cookie('token', token, {
@@ -107,7 +105,7 @@ async function handleGoogleAuth(req,res){
     maxAge: 7 * 24 * 60 * 60 * 1000,
   })
 
-  res.redirect("http://localhost:5173/oauth/success");
+  res.redirect(`${process.env.FRONTEND_URL}/oauth/success`);
 }
 
 async function handleAuthMe(req,res){
