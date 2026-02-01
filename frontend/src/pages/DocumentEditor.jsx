@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
 import { Bold,Italic,Undo, Redo,AlignLeft,AlignCenter,AlignRight,List,ListOrdered,FileText, Bot } from "lucide-react";
 import { toast } from "react-toastify";
-import AIPanel from "../components/AiPanel";
+import AIPanel from "../components/AIPanel";
 import { marked } from "marked";
 
 
