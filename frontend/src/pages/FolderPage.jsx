@@ -58,7 +58,7 @@ export default function FolderPage() {
 
       toast.success(data.message);
       navigate(`/doc/${data.docId}`);
-    } catch {
+    } catch(err) {
       toast.error(err.message);
     }
   };
